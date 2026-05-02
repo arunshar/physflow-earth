@@ -29,6 +29,21 @@ bash scripts/download_worldstrat.sh
 python -m physflow.training.train +experiment=sentinel2_x4
 ```
 
+## Smoke tests
+
+```bash
+uv venv --python 3.11 .venv && source .venv/bin/activate
+uv pip install -e ".[dev,space]"
+pytest                                    # 8 + 12 = 20 tests
+python /tmp/launch_smoke.py "$(pwd)" space/app.py
+```
+
+Verified status (CPU smoke):
+- 8/8 physics-residual + rectified-flow tests (mass conservation, divergence, NDVI/NDWI band ratios, contrastive flow training step with backward).
+- 12/12 Space smoke tests (DiT-XL forward shape, Euler-sample inference shape, full training step with backward gradient, UI build, requirements parseable, HF README frontmatter).
+- Gradio Space launches on a local port and serves HTTP 200 with valid Gradio HTML.
+- `space/requirements.txt` resolves cleanly.
+
 ## Try the live demo
 
 [HF Space](https://huggingface.co/spaces/arun08sharma/physflow-earth) — Folium AOI picker, variable / scenario dropdowns, side-by-side coarse vs. downscaled output with a physics-violation dashboard.
