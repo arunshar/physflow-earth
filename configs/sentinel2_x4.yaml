@@ -1,0 +1,11 @@
+defaults:
+  - default
+  - _self_
+
+dataset:
+  kind: worldstrat
+
+physics:
+  band_ratio: {enabled: true, weight: 1.0}
+  divergence: {enabled: false}
+  mass_conservation: {enabled: false}

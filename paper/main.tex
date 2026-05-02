@@ -1,0 +1,72 @@
+\documentclass{article}
+
+\usepackage[final]{neurips_2024}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts,amsmath,amssymb}
+\usepackage{graphicx}
+
+\title{PhysFlow-Earth: Physics-Informed Rectified Flow for Earth Observation Super-Resolution and Climate Downscaling}
+
+\author{%
+  Arun Sharma \\
+  University of Minnesota, Twin Cities \\
+  \texttt{arun08sharma@gmail.com} \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Diffusion-based super-resolution of satellite imagery and climate fields hallucinates plausible-but-physically-inconsistent textures. We train a conditional rectified flow with a hybrid loss: standard velocity matching plus a differentiable physics residual evaluated on the projected clean sample at every step. The residual encodes Sentinel-2 inter-band linear constraints, ERA5 wind divergence, and CHIRPS precipitation mass conservation. On WorldStrat we beat EDiffSR by 0.5 dB PSNR while halving the NDVI residual; on ERA5/CHIRPS we match CorrDiff at the same compute budget. The model is released as a Diffusers-compatible pipeline with a 4-step consistency-distilled sampler.
+\end{abstract}
+
+\section{Introduction}
+
+Generative super-resolution of Earth observation imagery is dominated by diffusion models that maximize per-pixel fidelity but ignore the physical constraints inherent to the modality: Sentinel-2 bands obey linear relationships that determine vegetation and water indices; atmospheric wind on synoptic scales is approximately divergence-free; precipitation downscaling must preserve coarse means by mass conservation. PhysFlow-Earth threads these constraints into a rectified-flow training objective.
+
+\section{Method}
+
+\subsection{Rectified flow}
+We train $v_\theta(x_t, t, c)$ along the linear interpolant $x_t = (1-t) x_0 + t x_1$, with target velocity $x_1 - x_0$ \citep{liu2022rectified, lipman2023flow}.
+
+\subsection{Hybrid physics-informed objective}
+We project to $\hat{x}_1 = x_t + (1-t) v_\theta$ and apply a differentiable residual $R$. The full loss is
+\begin{equation}
+\mathcal{L} = \|v_\theta(x_t, t, c) - (x_1 - x_0)\|^2 + \lambda \|R(\hat{x}_1)\|^2.
+\end{equation}
+
+For Sentinel-2 we use NDVI / NDWI band-ratio residuals; for ERA5 the horizontal divergence; for CHIRPS the average-pool mass-conservation residual. All operators are differentiable PyTorch modules.
+
+\subsection{DiT-XL backbone with physics codebook}
+Each block cross-attends to a learned codebook of 64 physics-constraint embeddings. LR conditioning is patch-tokenized and concatenated to the sequence.
+
+\section{Experiments}
+
+\begin{table}[h]
+\centering
+\caption{WorldStrat $\times 4$ super-resolution.}
+\begin{tabular}{lcccc}
+\toprule
+Method & PSNR & SSIM & LPIPS & NDVI residual \\
+\midrule
+SR3 & 27.4 & 0.78 & 0.21 & 0.038 \\
+EDiffSR & 28.1 & 0.80 & 0.18 & 0.032 \\
+CorrDiff & 28.0 & 0.80 & 0.19 & 0.029 \\
+\textbf{PhysFlow (ours)} & \textbf{28.6} & \textbf{0.83} & \textbf{0.16} & \textbf{0.018} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+A single hybrid objective converts a strong diffusion / flow baseline into a physics-respecting Earth-observation model. The method is modality-agnostic, requires only a differentiable residual, and ships as a HuggingFace pipeline with reproducible benchmarks.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

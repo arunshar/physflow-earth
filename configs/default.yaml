@@ -1,0 +1,50 @@
+defaults:
+  - _self_
+
+device: cuda
+image_hw: [256, 256]
+
+dataset:
+  kind: worldstrat
+  root: data/worldstrat
+  split: train
+  workers: 8
+  scale_factor: 4
+
+model:
+  in_channels: 4
+  hidden: 768
+  depth: 8
+  heads: 12
+  patch: 4
+
+physics:
+  enabled: true
+  weight: 0.1
+  scale_factor: 4
+  band_ratio:
+    enabled: true
+    bands: {red: 0, green: 1, nir: 3, swir: 3}
+    weight: 1.0
+  divergence:
+    enabled: false
+    dx: 1.0
+    dy: 1.0
+    weight: 0.1
+  mass_conservation:
+    enabled: false
+    weight: 1.0
+
+train:
+  epochs: 200
+  batch_size: 8
+  lr: 1.0e-4
+  wd: 1.0e-2
+  out_dir: outputs/sentinel2_x4
+
+sampling:
+  steps: 25
+
+logging:
+  wandb: true
+  every: 50

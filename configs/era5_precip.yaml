@@ -1,0 +1,24 @@
+defaults:
+  - default
+  - _self_
+
+image_hw: [128, 128]
+
+dataset:
+  kind: era5_chirps
+  root: data/era5_chirps
+  scale_factor: 5
+
+model:
+  in_channels: 1
+  hidden: 768
+  depth: 8
+
+physics:
+  scale_factor: 5
+  band_ratio: {enabled: false}
+  divergence: {enabled: false}
+  mass_conservation: {enabled: true, weight: 2.0}
+
+train:
+  out_dir: outputs/era5_precip
