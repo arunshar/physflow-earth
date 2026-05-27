@@ -2,9 +2,9 @@
 
 > Physics-informed rectified flow for Earth observation super-resolution and climate downscaling. Diffusers-compatible. `from_pretrained` loadable. Conserves mass and band ratios.
 
-[![HF Space](https://img.shields.io/badge/%F0%9F%A4%97-HF%20Space-yellow)](https://huggingface.co/spaces/arun08sharma/physflow-earth)
-[![HF Model](https://img.shields.io/badge/%F0%9F%A4%97-Sentinel2-blue)](https://huggingface.co/arun08sharma/physflow-sentinel2-x4)
-[![HF Model](https://img.shields.io/badge/%F0%9F%A4%97-ERA5%20Precip-blue)](https://huggingface.co/arun08sharma/physflow-era5-precip)
+[![HF Space](https://img.shields.io/badge/%F0%9F%A4%97-HF%20Space-yellow)](https://huggingface.co/spaces/Arun0808/physflow-earth)
+![Sentinel-2 checkpoint scaffold](https://img.shields.io/badge/Sentinel--2-checkpoint%20scaffold-blue)
+![ERA5 checkpoint scaffold](https://img.shields.io/badge/ERA5-checkpoint%20scaffold-blue)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 Diffusion-based super-resolution of satellite imagery and climate fields hallucinates plausible-but-physically-inconsistent textures: violated mass conservation in precipitation fields, broken Sentinel-2 band ratios (NDVI / NDWI / SAVI), non-physical divergence in wind fields. PhysFlow-Earth is a conditional rectified-flow trained with a hybrid objective: standard flow-matching velocity loss plus a physics-residual term evaluated on the predicted clean sample at every step, with the residual gradient backpropagated through the ODE solver. The result is generative super-resolution that respects the conservation laws specific to each modality.
@@ -16,7 +16,7 @@ This work extends three published diffusion papers (Pi-DPM, Kriging-informed con
 - Conditional rectified-flow with a DiT-XL backbone and cross-attention to a learned codebook of 64 physics-constraint embeddings.
 - Differentiable physics residual operators per modality: Sentinel-2 band-ratio preservation, ERA5 divergence-free wind, CHIRPS precipitation mass conservation.
 - 4-step consistency-distilled inference (200x speedup vs. 25-step Euler).
-- Diffusers-compatible: `pipeline = PhysFlowPipeline.from_pretrained("arun08sharma/physflow-sentinel2-x4")`.
+- Diffusers-compatible: `pipeline = PhysFlowPipeline.from_pretrained("Arun0808/physflow-sentinel2-x4")`.
 - Beats EDiffSR (CVPR 2024) on WorldStrat PSNR/SSIM and improves the new physics-violation metric by 25-40%.
 
 ## Quickstart
@@ -46,7 +46,7 @@ Verified status (CPU smoke):
 
 ## Try the live demo
 
-[HF Space](https://huggingface.co/spaces/arun08sharma/physflow-earth) — Folium AOI picker, variable / scenario dropdowns, side-by-side coarse vs. downscaled output with a physics-violation dashboard.
+[HF Space](https://huggingface.co/spaces/Arun0808/physflow-earth) — Folium AOI picker, variable / scenario dropdowns, side-by-side coarse vs. downscaled output with a physics-violation dashboard.
 
 ## Method
 
@@ -94,7 +94,7 @@ physflow-earth/
 
 ```bash
 python -m physflow.eval.worldstrat_bench \
-  --pipeline hf://arun08sharma/physflow-sentinel2-x4 \
+  --pipeline hf://Arun0808/physflow-sentinel2-x4 \
   --metrics psnr ssim lpips ndvi_residual band_ratio_violation
 ```
 

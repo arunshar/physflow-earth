@@ -34,10 +34,20 @@ def downscale(
 
 
 def _load_pipeline(variable):
-    from physflow.models import PhysFlowPipeline
-    if "Sentinel" in variable:
-        return PhysFlowPipeline.from_pretrained("arun08sharma/physflow-sentinel2-x4")
-    return PhysFlowPipeline.from_pretrained("arun08sharma/physflow-era5-precip")
+    """Return a CPU-safe demo pipeline for the public Space.
+
+    The trainable `PhysFlowPipeline.from_pretrained(...)` path stays in the
+    library, but the hosted demo should not depend on private checkpoints.
+    """
+    import torch.nn.functional as F
+
+    scale = 4 if "Sentinel" in variable else 5
+
+    def pipeline(x_lr):
+        sr = F.interpolate(x_lr, scale_factor=scale, mode="bilinear", align_corners=False)
+        return sr.clamp(-1, 1)
+
+    return pipeline
 
 
 def _fetch_coarse(variable, aoi_geojson, year, scenario):
