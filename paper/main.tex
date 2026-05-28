@@ -1,72 +1,1156 @@
 \documentclass{article}
 
-\usepackage[final]{neurips_2024}
-\usepackage[utf8]{inputenc}
+% --- Page geometry to match NeurIPS format ---
+\usepackage[
+  letterpaper,
+  textheight=9in,
+  textwidth=5.5in,
+  top=1in,
+  headheight=12pt,
+  headsep=25pt,
+  footskip=30pt
+]{geometry}
+\usepackage{times}
+\renewcommand{\rmdefault}{ptm}
+\renewcommand{\sfdefault}{phv}
 \usepackage[T1]{fontenc}
-\usepackage{hyperref}
-\usepackage{url}
-\usepackage{booktabs}
-\usepackage{amsfonts,amsmath,amssymb}
+\usepackage[utf8]{inputenc}
+
+% --- Math and symbols ---
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+
+% --- Tables and figures ---
 \usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
 
-\title{PhysFlow-Earth: Physics-Informed Rectified Flow for Earth Observation Super-Resolution and Climate Downscaling}
+% --- Code and algorithms ---
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{xcolor}
 
-\author{%
-  Arun Sharma \\
-  University of Minnesota, Twin Cities \\
-  \texttt{arun08sharma@gmail.com} \\
+% --- Hyperlinks and references ---
+\usepackage[colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{plainnat}
+
+% --- TikZ for diagrams ---
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathmorphing}
+
+% --- Misc ---
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\widowpenalty=10000
+\clubpenalty=10000
+\flushbottom
+\tolerance=1800
+\emergencystretch=1.5em
+\hfuzz=0.3pt
+\hbadness=10000
+\vbadness=10000
+\parfillskip=0pt plus 0.35\textwidth
+
+% --- Title formatting ---
+\makeatletter
+\providecommand*{\toclevel@algorithm}{0}
+\renewcommand{\normalsize}{%
+  \@setfontsize\normalsize\@xpt\@xipt
+  \abovedisplayskip      7\p@ \@plus 2\p@ \@minus 5\p@
+  \abovedisplayshortskip \z@  \@plus 3\p@
+  \belowdisplayskip      \abovedisplayskip
+  \belowdisplayshortskip 4\p@ \@plus 3\p@ \@minus 3\p@
+}
+\normalsize
+\renewcommand{\small}{%
+  \@setfontsize\small\@ixpt\@xpt
+  \abovedisplayskip      6\p@ \@plus 1.5\p@ \@minus 4\p@
+  \abovedisplayshortskip \z@  \@plus 2\p@
+  \belowdisplayskip      \abovedisplayskip
+  \belowdisplayshortskip 3\p@ \@plus 2\p@ \@minus 2\p@
+}
+\renewcommand{\footnotesize}{\@setfontsize\footnotesize\@ixpt\@xpt}
+\renewcommand{\scriptsize}{\@setfontsize\scriptsize\@viipt\@viiipt}
+\renewcommand{\tiny}{\@setfontsize\tiny\@vipt\@viipt}
+\renewcommand{\large}{\@setfontsize\large\@xiipt{14}}
+\renewcommand{\Large}{\@setfontsize\Large\@xivpt{16}}
+\renewcommand{\LARGE}{\@setfontsize\LARGE\@xviipt{20}}
+\renewcommand{\huge}{\@setfontsize\huge\@xxpt{23}}
+\renewcommand{\Huge}{\@setfontsize\Huge\@xxvpt{28}}
+
+\renewcommand{\section}{%
+  \@startsection{section}{1}{\z@}%
+                {-2.0ex \@plus -0.5ex \@minus -0.2ex}%
+                {0.8ex \@plus 0.2ex \@minus 0.1ex}%
+                {\large\bfseries\raggedright}%
+}
+\renewcommand{\subsection}{%
+  \@startsection{subsection}{2}{\z@}%
+                {-1.8ex \@plus -0.5ex \@minus -0.2ex}%
+                {0.5ex \@plus 0.15ex \@minus 0.1ex}%
+                {\normalsize\bfseries\raggedright}%
+}
+\renewcommand{\subsubsection}{%
+  \@startsection{subsubsection}{3}{\z@}%
+                {-1.5ex \@plus -0.5ex \@minus -0.2ex}%
+                {0.35ex \@plus 0.1ex \@minus 0.05ex}%
+                {\normalsize\bfseries\raggedright}%
+}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.4}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.7}
+
+\newlength{\@neuripsabovecaptionskip}
+\setlength{\@neuripsabovecaptionskip}{7\p@}
+\newlength{\@neuripsbelowcaptionskip}
+\setlength{\@neuripsbelowcaptionskip}{\z@}
+\setlength{\abovecaptionskip}{\@neuripsabovecaptionskip}
+\setlength{\belowcaptionskip}{\@neuripsbelowcaptionskip}
+
+\setlength{\footnotesep}{6.65\p@}
+\setlength{\skip\footins}{9\p@ \@plus 4\p@ \@minus 2\p@}
+\renewcommand{\footnoterule}{\kern-3\p@ \hrule width 12pc \kern 2.6\p@}
+\setcounter{footnote}{0}
+
+\setlength{\parindent}{\z@}
+\setlength{\parskip}{0pt}
+\setlist{topsep=0pt, itemsep=0pt, parsep=0pt, partopsep=0pt}
+\setlength{\bibsep}{0pt}
+
+\let\oldthebibliography\thebibliography
+\let\oldendthebibliography\endthebibliography
+\renewenvironment{thebibliography}[1]{%
+  \oldthebibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\topsep}{0pt}%
+  \setlength{\partopsep}{0pt}%
+}{%
+  \oldendthebibliography
 }
 
-\begin{document}
+\newcommand{\@noticestring}{%
+  40th Annual Conference on Neural Information Processing Systems (NeurIPS 2026).%
+}
 
+\renewcommand{\maketitle}{%
+  \par
+  \begingroup
+    \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+    \renewcommand{\@makefnmark}{\hbox to \z@{$^{\@thefnmark}$\hss}}
+    \long\def\@makefntext##1{%
+      \parindent 1em\noindent
+      \hbox to 1.8em{\hss $\m@th ^{\@thefnmark}$}##1
+    }
+    \thispagestyle{empty}
+    \@maketitle
+    \@thanks
+    \@notice
+  \endgroup
+  \let\maketitle\relax
+  \let\thanks\relax
+}
+
+\newcommand{\@toptitlebar}{%
+  \hrule height 4\p@
+  \vskip 0.25in
+  \vskip -\parskip%
+}
+\newcommand{\@bottomtitlebar}{%
+  \vskip 0.29in
+  \vskip -\parskip
+  \hrule height 1\p@
+  \vskip 0.09in%
+}
+
+\renewcommand{\@maketitle}{%
+  \vbox{%
+    \hsize\textwidth
+    \linewidth\hsize
+    \vskip 0.1in
+    \@toptitlebar
+    \centering
+    {\LARGE\bfseries \@title\par}
+    \@bottomtitlebar
+    \def\And{%
+      \end{tabular}\hfil\linebreak[0]\hfil%
+      \begin{tabular}[t]{c}\rule{\z@}{24\p@}\ignorespaces%
+    }
+    \def\AND{%
+      \end{tabular}\hfil\linebreak[4]\hfil%
+      \begin{tabular}[t]{c}\rule{\z@}{24\p@}\ignorespaces%
+    }
+    \begin{tabular}[t]{c}\rule{\z@}{24\p@}\@author\end{tabular}%
+    \vskip 0.3in \@minus 0.1in
+  }%
+}
+
+\newcommand{\ftype@noticebox}{8}
+\newcommand{\@notice}{%
+  \enlargethispage{2\baselineskip}%
+  \@float{noticebox}[b]%
+    \footnotesize\@noticestring%
+  \end@float%
+}
+
+\renewenvironment{abstract}%
+{%
+  \vskip 0.075in%
+  \centerline{\large\bfseries Abstract}%
+  \vspace{0.5ex}%
+  \begin{quote}%
+}
+{%
+  \par%
+  \end{quote}%
+  \vskip 1ex%
+}
+\makeatother
+
+% --- Listings style ---
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  frame=single,
+  xleftmargin=1em,
+  framexleftmargin=0.5em
+}
+
+% --- Project diagram styles ---
+\tikzset{
+  paperblock/.style={draw,rounded corners=2pt,thick,align=center,inner sep=3.5pt,font=\scriptsize,minimum height=0.62cm},
+  paperarrow/.style={-{Stealth[length=2.2mm,width=1.6mm]},line width=0.66pt,shorten >=3pt,shorten <=3pt,line cap=round},
+  paperdata/.style={paperblock,fill=cyan!8,draw=cyan!55!black},
+  papermodel/.style={paperblock,fill=green!8,draw=green!45!black},
+  paperloss/.style={paperblock,fill=orange!10,draw=orange!70!black},
+  paperout/.style={paperblock,fill=violet!8,draw=violet!55!black}
+}
+
+% ============================================================
+\title{PhysFlow-Earth: Physics-Constrained Rectified Flow for Earth Observation Super-Resolution and Climate Downscaling}
+\author{
+  \textbf{Arun Sharma}\\
+  University of Minnesota, Twin Cities\\
+  \texttt{arunshar@umn.edu}
+}
+\date{}
+
+\begin{document}
 \maketitle
 
 \begin{abstract}
-Diffusion-based super-resolution of satellite imagery and climate fields hallucinates plausible-but-physically-inconsistent textures. We train a conditional rectified flow with a hybrid loss: standard velocity matching plus a differentiable physics residual evaluated on the projected clean sample at every step. The residual encodes Sentinel-2 inter-band linear constraints, ERA5 wind divergence, and CHIRPS precipitation mass conservation. On WorldStrat we beat EDiffSR by 0.5 dB PSNR while halving the NDVI residual; on ERA5/CHIRPS we match CorrDiff at the same compute budget. The model is released as a Diffusers-compatible pipeline with a 4-step consistency-distilled sampler.
+Generative super-resolution models can produce visually plausible Earth-observation fields while violating the physical quantities that make the fields useful: coarse precipitation totals, wind divergence, or spectral index consistency in multispectral imagery. PhysFlow-Earth is a conditional rectified-flow stack for satellite and climate downscaling that exposes these constraints as differentiable residuals during training. The implementation combines a rectified-flow objective, a Diffusion Transformer velocity backbone, low-resolution conditioning tokens, and a learned physics codebook. Residual modules enforce average-pool consistency for precipitation, horizontal-divergence penalties for wind, and band-ratio consistency for Sentinel-2. This paper documents the project as an arXiv-style systems paper grounded in the current repository. It reports only implementation validation from the test suite and leaves benchmark claims for future reproduction on WorldStrat, SEN2VENuS, ERA5, and CHIRPS.
 \end{abstract}
 
 \section{Introduction}
 
-Generative super-resolution of Earth observation imagery is dominated by diffusion models that maximize per-pixel fidelity but ignore the physical constraints inherent to the modality: Sentinel-2 bands obey linear relationships that determine vegetation and water indices; atmospheric wind on synoptic scales is approximately divergence-free; precipitation downscaling must preserve coarse means by mass conservation. PhysFlow-Earth threads these constraints into a rectified-flow training objective.
+Remote-sensing and climate products often require information at a spatial resolution finer than the native sensor or simulation grid. Super-resolution and statistical downscaling methods address this mismatch by learning a mapping from coarse fields to high-resolution fields. Diffusion and flow-based generative models are attractive because they represent uncertainty and can synthesize sharp spatial structure \citep{ho2020denoising,lipman2023flow,liu2022rectified}. In scientific geospatial settings, however, sharpness is not enough. The high-resolution output must preserve coarse aggregate mass, respect physically meaningful band relationships, and avoid vector-field artifacts.
 
-\section{Method}
+PhysFlow-Earth implements a conservative alternative: a conditional rectified flow whose training loss includes differentiable physics residuals evaluated on the projected clean sample. The repository is deliberately structured as a reusable research implementation. It provides the flow wrapper, residual operators, a DiT-style velocity model, a Diffusers-like pipeline interface, Hydra configuration, a Gradio Space, and CPU tests.
 
-\subsection{Rectified flow}
-We train $v_\theta(x_t, t, c)$ along the linear interpolant $x_t = (1-t) x_0 + t x_1$, with target velocity $x_1 - x_0$ \citep{liu2022rectified, lipman2023flow}.
+This paper takes a conservative stance. The README describes intended benchmark targets and deployment workflows, but the current paper does not restate unverified leaderboard claims. Instead it explains the method, records what the tests establish, and names the measurements needed before submission.
 
-\subsection{Hybrid physics-informed objective}
-We project to $\hat{x}_1 = x_t + (1-t) v_\theta$ and apply a differentiable residual $R$. The full loss is
+\paragraph{Contributions:}
+\begin{enumerate}
+  \item A conditional rectified-flow objective for Earth-observation super-resolution with residuals applied to the predicted clean sample.
+  \item Differentiable residual modules for coarse mass conservation, horizontal wind divergence, and Sentinel-2 band-ratio preservation.
+  \item A DiT velocity backbone with low-resolution conditioning tokens and cross-attention to a learned physics codebook.
+  \item A reproducible software package with shape tests, residual tests, training-step tests, and a CPU-safe Hugging Face Space.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+
+
+
+
+\begin{tikzpicture}[x=0.755cm,y=0.95cm,font=\scriptsize,every node/.style={align=center}]
+  \node[font=\bfseries] at (1.15,4.18) {A. Inputs};
+  \node[paperdata,minimum width=1.88cm] (in1) at (1.05,3.22) {low-res EO chips};
+  \node[paperdata,minimum width=1.88cm] (in2) at (1.05,2.10) {static terrain fields};
+  \node[paperdata,minimum width=1.88cm] (in3) at (1.05,0.98) {physics residuals};
+  \node[papermodel,minimum width=2.18cm] (embed) at (3.85,2.10) {multi-scale tokenizer};
+  \draw[paperarrow] (in1.east) -- ([yshift=0.20cm]embed.west);
+  \draw[paperarrow] (in2.east) -- (embed.west);
+  \draw[paperarrow] (in3.east) -- ([yshift=-0.20cm]embed.west);
+
+  \node[font=\bfseries] at (6.30,4.18) {B. Attention encoder};
+  \node[papermodel,minimum width=2.18cm] (ln) at (6.25,3.34) {LayerNorm};
+  \node[papermodel,minimum width=2.18cm] (qkv) at (6.25,2.47) {conditioned $Q,K,V$};
+  \node[papermodel,minimum width=2.18cm] (attn) at (6.25,1.60) {flow-matching attention};
+  \node[papermodel,minimum width=2.18cm] (ffn) at (6.25,0.73) {physics MLP + residual};
+  \draw[paperarrow] (embed.east) -- (ln.west);
+  \draw[paperarrow] (ln.south) -- (qkv.north);
+  \draw[paperarrow] (qkv.south) -- (attn.north);
+  \draw[paperarrow] (attn.south) -- (ffn.north);
+  \node[font=\tiny] at (7.40,0.34) {residual add/norm};
+
+  \node[inner sep=0pt,minimum width=0.84cm,minimum height=0.84cm] (mat) at (8.45,1.78) {};
+  \begin{scope}[shift={(8.05,1.38)}]
+    \foreach \i in {0,...,4}{\foreach \j in {0,...,4}{
+      \pgfmathsetmacro{\v}{18+10*\i+8*\j}
+      \fill[blue!\v!white,draw=blue!20!white,line width=0.05pt] (0.16*\i,0.16*\j) rectangle ++(0.14,0.14);
+    }}
+    \node[font=\tiny] at (0.40,1.02) {$QK^\top/\sqrt d$};
+  \end{scope}
+  \draw[paperarrow] (attn.east) -- (mat.west);
+  \coordinate (bus) at (9.55,1.78);
+  \draw[paperarrow] (mat.east) -- (bus);
+
+  \node[font=\bfseries] at (12.45,4.18) {C. Decoder heads};
+  \node[paperloss,minimum width=2.42cm] (h1) at (11.30,2.95) {velocity $v_\theta$};
+  \node[paperloss,minimum width=2.42cm] (h2) at (11.30,1.20) {constraint $r_\phi$};
+  \node[paperout,minimum width=2.55cm] (fuse) at (14.20,2.08) {guided update $x_t+v\,dt$};
+  \node[paperout,minimum width=2.12cm] (out) at (16.65,2.08) {forecast tile};
+  \draw[semithick,gray!70] (9.55,0.90) -- (9.55,3.25);
+  \draw[paperarrow] (9.55,2.95) -- (h1.west);
+  \draw[paperarrow] (9.55,1.20) -- (h2.west);
+  \draw[paperarrow] (h1.east) -- ([yshift=0.28cm]fuse.west);
+  \draw[paperarrow] (h2.east) -- ([yshift=-0.28cm]fuse.west);
+  \draw[paperarrow] (fuse.east) -- (out.west);
+
+  \node[font=\bfseries] at (12.65,0.30) {D. Evaluation heads};
+  \foreach \x/\lab in {9.85/PSNR/LPIPS,11.35/residual,12.82/runtime,14.28/calibration}{
+    \node[paperout,minimum width=1.25cm,minimum height=0.36cm,font=\tiny] at (\x,-0.30) {\lab};
+  }
+  \draw[paperarrow] (out.south) -- ++(0,-0.72) -| (14.28,-0.05);
+
+  \begin{scope}[shift={(1.05,-1.88)}]
+    \draw[fill=gray!10,draw=gray!45,line width=0.3pt] (0,0.12) -- (1.2,0.30) -- (2.4,0.08) -- (3.65,0.38) -- (4.95,0.14);
+    \foreach \x/\y in {0.30/0.25,1.00/0.33,1.75/0.18,2.45/0.16,3.25/0.42,4.10/0.28}{\fill[green!50!black] (\x,\y) circle (1.1pt);}
+    \draw[paperarrow,cyan!65!black] (2.45,1.00) -- (1.20,0.42);
+    \draw[paperarrow,cyan!65!black] (2.45,1.00) -- (3.35,0.52);
+    \node[font=\tiny] at (2.45,1.18) {coarse-to-fine EO grid};
+  \end{scope}
+\end{tikzpicture}
+\caption{Detailed PhysFlow-Earth architecture. The diagram shows the tokenized conditional transport path, the repeated attention-style velocity block, the clean-sample decoder, and the physics residual heads. The evaluation side is explicit so image metrics, scientific residuals, calibration, and sampling cost are not conflated.}
+\label{fig:physflow-architecture}
+\end{figure}
+
+\paragraph{Scope:}
+
+The central research tension in Earth-observation downscaling is that visual quality and scientific validity are not the same objective. A high-resolution precipitation field can look crisp while violating the coarse accumulation that conditioned it. A wind field can look spatially realistic while producing implausible divergence artifacts. A multispectral sample can improve image metrics while distorting indices used by downstream land-cover or water analysis. This makes naive image super-resolution a poor default for scientific geospatial data.
+
+PhysFlow-Earth positions generative modeling as a conditional transport problem with explicit scientific residuals. The model is allowed to represent uncertainty and high-frequency structure, but it is penalized when the predicted endpoint violates known aggregate or spectral constraints. This is a middle path between unconstrained image generation and hard-coded physical simulation. It is not a replacement for numerical weather prediction or radiative-transfer modeling. It is a lightweight framework for making neural downscaling less indifferent to the quantities that domain users care about.
+
+The choice of rectified flow is pragmatic. Diffusion models are strong but can require many denoising steps and a more complex training objective. Rectified flow gives a direct velocity target and a clean endpoint estimate. That endpoint estimate is precisely where residuals should be evaluated. The method therefore has a natural place to ask: if this is the model's current clean high-resolution field, does it preserve mass, divergence behavior, and band relationships?
+
+The paper should be read as a research implementation rather than a leaderboard claim. The repository implements the residuals, model wrapper, DiT-style velocity path, pipeline surface, and tests. What it does not yet contain is a public benchmark table on WorldStrat, SEN2VENuS, ERA5, WeatherBench, or CHIRPS. This distinction matters. This paper builds enough theory and evaluation detail to make those future results interpretable instead of merely decorative.
+
+\paragraph{Expanded contributions:}
+The expanded version contributes four additional research assets: a residual-weight selection protocol, an area-weighted aggregation extension for global grids, an uncertainty-evaluation plan for generative downscaling, and a set of reader-facing claim boundaries. These are necessary because a physics-guided generative model can otherwise sound impressive while remaining scientifically under-specified.
+
+\section{Related Work}
+
+\paragraph{Expanded Citation Map:}
+The expanded references place PhysFlow-Earth between image restoration, generative modeling, physics-informed learning, and weather/remote-sensing downscaling. SRCNN, SRGAN, EDSR, RCAN, SwinIR, and U-Net represent the classical deep restoration backbone family \citep{dong2016srcnn,ledig2017srgan,lim2017edsr,zhang2018rcan,liang2021swinir,ronneberger2015unet}. DDPM, score-based modeling, Palette, latent diffusion, EDM, DiT, rectified flow, flow matching, and stochastic interpolants define the generative side \citep{ho2020denoising,song2021score,saharia2022image,rombach2022latent,karras2022edm,peebles2023scalable,liu2022rectified,lipman2023flow,albergo2023stochastic}. Physics-informed neural networks, theory-guided data science, scientific-knowledge integration, Fourier neural operators, FourCastNet, GraphCast, Pangu-Weather, and generative precipitation nowcasting motivate residual checks beyond perceptual sharpness \citep{raissi2019physics,karpatne2017theory,karniadakis2021physicsinformed,willard2022integrating,li2021fourier,pathak2022fourcastnet,lam2023graphcast,bi2023panguweather,ravuri2021skillful}. WorldStrat, SEN2VENuS, CorrDiff, and precipitation diffusion define the likely benchmark neighborhood \citep{cornebise2022worldstrat,michel2022sen2venus,mardani2023corrdiff,leinonen2023precipitation}.
+
+
+\paragraph{Generative super-resolution:}
+Diffusion models have become a standard route to high-fidelity image generation \citep{ho2020denoising,song2021score,saharia2022image}. Rectified flow and flow matching simplify sampling by learning velocity fields between noise and data \citep{liu2022rectified,lipman2023flow}. PhysFlow-Earth follows this family but treats physical consistency as a training objective, not a post-hoc filter.
+
+\paragraph{Transformers for diffusion and flow:}
+Diffusion Transformers replace U-Net inductive biases with patch-token self-attention and adaptive normalization \citep{peebles2023scalable}. This design is useful for multispectral and climate grids because conditioning can be represented as tokens rather than only as concatenated channels.
+
+\paragraph{Physics-guided machine learning:}
+Physics-informed neural networks and knowledge-guided machine learning show that scientific constraints can improve generalization and prevent physically invalid outputs \citep{raissi2019physics,karpatne2017theory}. PhysFlow-Earth keeps the constraint layer lightweight: residuals are ordinary differentiable PyTorch modules with a common interface.
+
+\paragraph{Earth-observation downscaling:}
+Remote-sensing super-resolution and climate downscaling have different data assumptions but a shared mathematical structure: infer a high-resolution field conditioned on a coarser observation. WorldStrat provides paired high-resolution commercial satellite imagery and Sentinel-2 context for global super-resolution research \citep{cornebise2022worldstrat}. SEN2VENuS provides Sentinel-2 and VEN$\mu$S acquisitions for radiometrically consistent super-resolution \citep{michel2022sen2venus}. Diffusion-based atmospheric downscaling work such as CorrDiff and spatiotemporal precipitation diffusion shows that generative models can sharpen weather fields while representing uncertainty \citep{mardani2023corrdiff,leinonen2023precipitation}. PhysFlow-Earth fits into this line but makes the residual constraints explicit in the loss. Earth-system ML and climate-ML surveys further argue that process understanding and scientific diagnostics should be integrated into model design rather than left as a post-hoc visualization layer \citep{reichstein2019deep,rolnick2019climate}.
+
+
+
+\paragraph{Literature synthesis:}
+PhysFlow-Earth combines two research streams that are often evaluated with different instincts. Diffusion, score-based modeling, rectified flows, latent diffusion, and flow matching provide powerful conditional generative models for images \citep{ho2020denoising,song2021score,liu2022rectified,lipman2023flow,rombach2022latent,karras2022edm}. Remote-sensing super-resolution and downscaling papers, including SRGAN, EDSR, RCAN, SwinIR, CorrDiff, GraphCast, FourCastNet, Pangu-Weather, and precipitation nowcasting, emphasize scientific validity, calibration, and geophysical structure \citep{ledig2017srgan,lim2017edsr,zhang2018rcan,liang2021swinir,mardani2023corrdiff,lam2023graphcast,pathak2022fourcastnet,bi2023panguweather,ravuri2021skillful}.
+
+The key tension is that perceptual sharpness and physical consistency are not identical objectives. A visually plausible high-resolution field can violate conservation, band relationships, or uncertainty calibration. Physics-informed neural networks and theory-guided data science address this tension by placing governing equations or residual constraints into the learning objective \citep{raissi2019physics,karpatne2017theory,karniadakis2021physicsinformed,willard2022integrating}. PhysFlow-Earth uses that idea in a generative downscaling setting: the residual does not replace the likelihood or flow objective, but it biases the sampler toward fields that respect declared physical checks.
+
+Earth-observation benchmarks also require careful geographic splits. WorldStrat, SEN2VENUS, and climate AI surveys show that remote-sensing models often fail when geography, season, sensor conditions, or domain shift changes \citep{cornebise2022worldstrat,michel2022sen2venus,reichstein2019deep,rolnick2019climate}. The literature therefore supports an evaluation that reports image metrics, residual metrics, uncertainty metrics, and held-out geography together. That combined reporting is the distinguishing feature of the paper.
+
+\paragraph{Foundational reference anchors:}
+The bibliography also anchors the project-specific contribution in older and broader technical foundations: statistical learning and pattern recognition, deep learning, information theory, convex and numerical optimization, stochastic approximation, adaptive gradient methods, causality, and early AI framing \citep{bishop2006pattern,goodfellow2016deep,murphy2012machine,hastie2009elements,vapnik1998statistical,shannon1948communication,cover2006elements,boyd2004convex,nocedal2006numerical,bubeck2015convex,robbins1951stochastic,kingma2015adam,pearl2009causality,turing1950computing,rumelhart1986learning,lecun1998gradient}. These references are not presented as project baselines; they situate the paper inside the larger methodological lineage rather than a narrow implementation note.
+
+\section{Method and Architecture}
+\paragraph{Problem Formulation:}
+
+Let $x_{\ell}$ be a low-resolution input field and $x_h$ be the high-resolution target. The task is to learn a conditional generator $G_{\theta}(x_{\ell})$ that produces high-resolution samples $\hat{x}_h$ matching the data distribution while preserving a set of physical or spectral constraints. Each modality defines a residual operator $R_m$:
 \begin{equation}
-\mathcal{L} = \|v_\theta(x_t, t, c) - (x_1 - x_0)\|^2 + \lambda \|R(\hat{x}_1)\|^2.
+  R_m(\hat{x}_h, x_{\ell}) \rightarrow \mathbb{R}^{C_m \times H_m \times W_m}.
+\end{equation}
+For coarse mass conservation, $R$ is an average-pooling error. For wind, it is a finite-difference divergence. For Sentinel-2, it compares indices such as NDVI and NDWI after downsampling.
+
+\paragraph{Method:}
+
+\paragraph{Rectified-flow training:}
+
+PhysFlow-Earth learns a velocity model $v_{\theta}(x_t,t,c)$ where $c$ includes low-resolution conditioning. For clean sample $x_1$ and random noise $x_0$, the linear interpolant is
+\begin{equation}
+  x_t = (1-t)x_0 + tx_1, \quad t\sim \mathcal{U}(0,1).
+\end{equation}
+The vanilla rectified-flow target is the constant velocity
+\begin{equation}
+  v^* = x_1 - x_0.
+\end{equation}
+The implementation computes a projected clean sample
+\begin{equation}
+  \hat{x}_1 = x_t + (1-t)v_{\theta}(x_t,t,c),
+\end{equation}
+and evaluates residuals on $\hat{x}_1$. The total objective is
+\begin{equation}
+  \mathcal{L} =
+  \|v_{\theta}(x_t,t,c)-(x_1-x_0)\|_2^2
+  + \lambda_{\text{phys}}\sum_m w_m \|R_m(\hat{x}_1,c)\|_2^2.
+\end{equation}
+Because the residual is evaluated before detaching the model output, gradients flow back through the velocity prediction.
+
+\paragraph{Residual operators:}
+
+\paragraph{Mass conservation:}
+For precipitation or other scalar intensive fields, the high-resolution output should preserve coarse cell means. The residual is
+\begin{equation}
+  R_{\text{mass}}(\hat{x}_h,x_{\ell}) =
+  \text{AvgPool}_{s}(\hat{x}_h)-x_{\ell}.
 \end{equation}
 
-For Sentinel-2 we use NDVI / NDWI band-ratio residuals; for ERA5 the horizontal divergence; for CHIRPS the average-pool mass-conservation residual. All operators are differentiable PyTorch modules.
+\paragraph{Horizontal divergence:}
+For a wind field $(u,v)$, PhysFlow-Earth computes a finite-difference divergence:
+\begin{equation}
+  R_{\text{div}} = \frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}.
+\end{equation}
+The operator is intentionally simple and unit-testable. Production runs should calibrate spacing from the actual grid.
 
-\subsection{DiT-XL backbone with physics codebook}
-Each block cross-attends to a learned codebook of 64 physics-constraint embeddings. LR conditioning is patch-tokenized and concatenated to the sequence.
+\paragraph{Band-ratio consistency:}
+For Sentinel-2, the model compares downsampled spectral indices:
+\begin{equation}
+\begin{aligned}
+\text{NDVI}(x)&=\frac{x_{\text{NIR}}-x_{\text{red}}}{x_{\text{NIR}}+x_{\text{red}}+\epsilon},\\
+\text{NDWI}(x)&=\frac{x_{\text{green}}-x_{\text{SWIR}}}{x_{\text{green}}+x_{\text{SWIR}}+\epsilon}.
+\end{aligned}
+\end{equation}
+The residual is the concatenation of average-pooled index differences.
 
-\section{Experiments}
+\paragraph{Velocity backbone:}
 
-\begin{table}[h]
+The velocity network is a Diffusion Transformer. High-resolution noisy fields are patch-embedded. Low-resolution fields are tokenized separately and concatenated to the patch sequence. Each block applies self-attention, cross-attention to a learned physics codebook, and an adaptive normalization MLP driven by sinusoidal time embeddings. The output head maps patch tokens back to pixel space through pixel shuffle.
+
+\paragraph{Implementation:}
+
+The project is packaged as \texttt{physflow}. Core modules are intentionally narrow:
+\begin{itemize}
+  \item \texttt{flow.RectifiedFlow}: wraps a velocity model and implements the hybrid loss.
+  \item \texttt{physics.residual}: defines residual modules with a shared interface.
+  \item \texttt{models.DiTVelocity}: implements the tokenized velocity backbone.
+  \item \texttt{models.PhysFlowPipeline}: exposes inference in a pipeline style.
+  \item \texttt{space/app.py}: demonstrates downscaling inputs and physics dashboards in Gradio.
+\end{itemize}
+
+\section{Evaluation}
+
+Table~\ref{tab:validation} summarizes the current implementation-grounded checks. These are not a replacement for benchmark evaluation, but they protect the scientific invariants the method depends on.
+
+\begin{table}[t]
 \centering
-\caption{WorldStrat $\times 4$ super-resolution.}
-\begin{tabular}{lcccc}
+\caption{Current validation in the PhysFlow-Earth repository.}
+\label{tab:validation}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.62\linewidth}r@{}}
 \toprule
-Method & PSNR & SSIM & LPIPS & NDVI residual \\
+\textbf{Area} & \textbf{What is checked} & \textbf{Count}\\
 \midrule
-SR3 & 27.4 & 0.78 & 0.21 & 0.038 \\
-EDiffSR & 28.1 & 0.80 & 0.18 & 0.032 \\
-CorrDiff & 28.0 & 0.80 & 0.19 & 0.029 \\
-\textbf{PhysFlow (ours)} & \textbf{28.6} & \textbf{0.83} & \textbf{0.16} & \textbf{0.018} \\
+Physics residuals & average pooling inverse, zero divergence on constant fields, linear-gradient divergence, mass residual, band-ratio residual & 6\\
+Flow training & velocity loss decreases on a tiny model, physics loss is non-negative, full backward pass runs & 3\\
+Model and Space path & DiT output shape, pipeline output shape, UI construction, constants, requirements, HF frontmatter & 8\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Conclusion}
+The next benchmark layer should evaluate WorldStrat and SEN2VENuS for Sentinel-2 super-resolution, ERA5 or WeatherBench-style grids for winds, and CHIRPS or ERA5 precipitation for conservation. Metrics should include PSNR, SSIM, LPIPS where appropriate, and residual-specific physical scores such as mass error, divergence norm, and spectral-index preservation.
 
-A single hybrid objective converts a strong diffusion / flow baseline into a physics-respecting Earth-observation model. The method is modality-agnostic, requires only a differentiable residual, and ships as a HuggingFace pipeline with reproducible benchmarks.
+\paragraph{Theory: Conditional Transport with Scientific Residuals:}
 
-\bibliographystyle{plainnat}
+PhysFlow-Earth can be understood as learning a conditional transport map from a simple base distribution to a high-resolution Earth-observation distribution. Let $p_0$ be the noise distribution and $p_1(x_h\mid x_{\ell})$ be the conditional data distribution of high-resolution fields given a low-resolution field. A continuous-time generator defines an ordinary differential equation
+\begin{equation}
+  \frac{d x_t}{dt}=v_{\theta}(x_t,t,x_{\ell}),\qquad x_0\sim p_0,\quad t\in[0,1],
+\end{equation}
+and produces $x_1$ by integrating the learned velocity field. Rectified flow chooses a simple linear interpolation between paired samples and trains the model to predict the displacement between endpoints \citep{liu2022rectified}. Flow matching generalizes this view to probability paths and corresponding vector fields \citep{lipman2023flow}.
+
+The scientific question is where physics enters this transport. A post-hoc filter can reject samples that violate a constraint, but rejection is expensive and does not teach the generator. A projection layer can force the output into a feasible set, but hard projections may be non-differentiable or may destroy perceptual detail. PhysFlow-Earth uses a softer design: it evaluates differentiable residuals on the predicted clean sample and adds those residuals to the training objective. This keeps sampling simple while shaping the learned velocity field.
+
+\paragraph{Residuals as weak constraints:}
+
+Let $\mathcal{C}$ be the ideal feasible set
+\begin{equation}
+  \mathcal{C}(x_{\ell}) = \{x: R_m(x,x_{\ell})=0\ \forall m\}.
+\end{equation}
+The training objective with residual penalties is a weak enforcement of this set:
+\begin{equation}
+  \mathbb{E}\left[
+  \|v_{\theta}(x_t,t,x_{\ell})-v^*\|_2^2
+  +\sum_m \lambda_m \|R_m(\hat{x}_1,x_{\ell})\|_2^2
+  \right].
+\end{equation}
+When $\lambda_m$ is small, residuals act as regularizers. When $\lambda_m$ is large, they approximate constrained optimization but may reduce sample diversity or introduce artifacts. A publication-quality version should therefore report a Pareto curve: perceptual quality versus physical residual. One scalar score is not enough.
+
+\paragraph{Clean-sample projection:}
+
+The residual is evaluated on
+\begin{equation}
+  \hat{x}_1=x_t+(1-t)v_{\theta}(x_t,t,x_{\ell}),
+\end{equation}
+not on $x_t$. This is important. At intermediate time $t$, $x_t$ contains noise by construction and should not satisfy physical constraints. The projected clean sample is the model's current estimate of the endpoint. Penalizing that estimate gives the velocity model useful gradients without asking noisy states to be physically meaningful.
+
+\paragraph{Conservation and aggregation:}
+
+For a coarse scalar field, the most basic consistency condition is aggregation:
+\begin{equation}
+  A_s x_h \approx x_{\ell},
+\end{equation}
+where $A_s$ averages each $s\times s$ high-resolution block. This is a discrete conservation law. For precipitation it can represent mass or accumulation consistency; for downscaled scalar variables it represents agreement with the coarse product. The residual
+\begin{equation}
+  R_{\text{mass}}=A_s\hat{x}_h-x_{\ell}
+\end{equation}
+is simple, differentiable, and easy to test. It is also incomplete: it does not ensure realistic texture, extremes, or temporal coherence. It should be reported alongside distributional metrics.
+
+\paragraph{Vector-field residuals:}
+
+For wind, the divergence proxy is
+\begin{equation}
+  R_{\text{div}}=\nabla_h\cdot \hat{u},
+\end{equation}
+where $\nabla_h$ is a horizontal finite-difference operator. This is a weak proxy rather than a full atmospheric equation. It does not include vertical motion, pressure gradients, Coriolis terms, boundary-layer effects, or terrain. Its role in the current repository is to test the architecture for vector residuals. The benchmark paper should be careful: it can claim a differentiable divergence residual, not a full Navier-Stokes or primitive-equation solver.
+
+\paragraph{Spectral residuals:}
+
+For Sentinel-2 imagery, radiometric consistency can be more useful than a generic image prior. NDVI and NDWI constraints are examples of index-level consistency. If the high-resolution output looks sharp but changes vegetation or water indices after downsampling, it is less useful for downstream Earth-science tasks. The residuals therefore compare band-ratio functions after aggregation. Because ratios are sensitive to denominator noise, the implementation includes $\epsilon$ and should evaluate sensitivity to radiometric scaling.
+
+\paragraph{Design Space:}
+
+PhysFlow-Earth sits between three families of methods:
+\begin{enumerate}
+  \item deterministic super-resolution models trained with pixel or perceptual losses;
+  \item diffusion or flow models trained for conditional sample quality;
+  \item physics-informed models trained with residual constraints.
+\end{enumerate}
+The project chooses the third path only where constraints are cheap and differentiable. It does not try to solve a full PDE inside the sampler. This is deliberate. A lightweight residual layer is easier to test, easier to ablate, and more likely to survive contact with heterogeneous satellite and climate products.
+
+\paragraph{Why rectified flow:}
+
+Rectified flow is attractive for this implementation because the target velocity $x_1-x_0$ is simple and the predicted clean sample has a closed-form estimate at any training time. For a portfolio implementation, this reduces moving parts relative to a multi-step denoising objective. In a future production model, the choice should be empirical: compare rectified flow, conditional diffusion, and flow matching under the same residual losses and sampling budgets.
+
+\paragraph{Why a DiT backbone:}
+
+Earth-observation fields are multi-channel arrays with long-range spatial structure. A DiT-style backbone makes conditioning modular. Low-resolution fields, time embeddings, variable identifiers, and physics-codebook tokens can be represented as tokens. This is useful when the same architecture must handle precipitation, wind, and multispectral imagery. The tradeoff is compute: transformers scale poorly with token count unless patch size, attention pattern, or windowing is chosen carefully.
+
+\paragraph{Why a physics codebook:}
+
+The learned physics codebook in the current repository is a conditioning mechanism. It should not be oversold as symbolic physics. Its purpose is to give the model a small set of learned latent anchors that can interact with patch tokens. A future paper should ablate the codebook size and compare it with ordinary learned condition tokens.
+
+\paragraph{Additional Literature Context:}
+
+\paragraph{Diffusion and score-based generation:}
+
+DDPM introduced a practical denoising objective for generative modeling \citep{ho2020denoising}. Score-based generative modeling framed the same family through stochastic differential equations \citep{song2021score}. SR3 showed that iterative refinement can produce strong image super-resolution results \citep{saharia2022image}. These methods are relevant because downscaling is a conditional image-generation problem. They are insufficient by themselves because scientific fields require consistency beyond visual plausibility.
+
+\paragraph{Flow matching and rectified transport:}
+
+Rectified flow learns a velocity field that moves noise to data along straight or nearly straight paths \citep{liu2022rectified}. Flow matching provides a broader framework for learning continuous normalizing flows from prescribed probability paths \citep{lipman2023flow}. PhysFlow-Earth uses this family because the velocity objective is direct and because residuals can be evaluated on the projected endpoint.
+
+\paragraph{Climate and weather downscaling:}
+
+CorrDiff uses residual corrective diffusion for kilometer-scale atmospheric downscaling \citep{mardani2023corrdiff}. Precipitation video diffusion uses temporal conditioning to represent high-frequency precipitation patterns \citep{leinonen2023precipitation}. These works motivate generative approaches for weather fields but also highlight the need for physical diagnostics: sharp precipitation maps are not automatically mass-consistent or decision-useful.
+
+\paragraph{Remote-sensing super-resolution datasets:}
+
+WorldStrat and SEN2VENuS are natural benchmark candidates \citep{cornebise2022worldstrat,michel2022sen2venus}. WorldStrat emphasizes global coverage and a pairing between high-resolution commercial imagery and Sentinel-2. SEN2VENuS emphasizes radiometrically consistent cross-sensor training data. A strong paper should use both if licensing and data volume allow because they stress different failure modes.
+
+\paragraph{Evaluation Protocol:}
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[node distance=0.35cm and 0.35cm]
+  \node[paperdata,minimum width=1.45cm] (split) {datasets\\ EO / climate};
+  \node[papermodel,right=of split,minimum width=1.45cm] (base) {baselines\\ bicubic / RF};
+  \node[papermodel,right=of base,minimum width=1.45cm] (abl) {sweeps\\ $\lambda_{\rm phys}$};
+  \node[paperout,below=of base,minimum width=1.45cm] (metric) {metrics\\ LPIPS, CRPS};
+  \node[paperloss,right=of metric,minimum width=1.45cm] (claim) {claims\\ Pareto front};
+  \draw[paperarrow] (split) -- (base);
+  \draw[paperarrow] (base) -- (abl);
+  \draw[paperarrow] (abl) -- (metric);
+  \draw[paperarrow] (metric) -- (claim);
+\end{tikzpicture}}
+\caption{Evaluation structure for PhysFlow-Earth: image quality, physical residuals, uncertainty, and compute are reported as a frontier rather than one scalar score.}
+\label{fig:physflow-eval}
+\end{figure}
+
+The evaluation must separate image quality, physical consistency, calibration, and sampling cost. Table~\ref{tab:protocol} gives the recommended measurement plan.
+
+\begin{table}[t]
+\centering
+\caption{Recommended evaluation protocol for a full PhysFlow-Earth paper.}
+\label{tab:protocol}
+\begin{tabular}{@{}p{0.22\linewidth}p{0.31\linewidth}p{0.33\linewidth}@{}}
+\toprule
+\textbf{Axis} & \textbf{Metrics} & \textbf{Purpose}\\
+\midrule
+Visual fidelity & PSNR, SSIM, LPIPS, spectral angle & standard comparison with super-resolution baselines\\
+Distributional realism & CRPS, rank histograms, extreme-value frequency & checks uncertainty and tails for climate variables\\
+Mass consistency & average-pool residual, coarse-cell bias & verifies conservation against the conditioning field\\
+Vector consistency & divergence norm and spatial spectrum & detects physically implausible wind artifacts\\
+Spectral consistency & NDVI and NDWI residuals after downsampling & checks downstream remote-sensing utility\\
+Sampling cost & number of function evaluations, wall time, memory & distinguishes quality from compute budget\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Baselines should include bicubic interpolation, deterministic CNN or U-Net super-resolution, conditional diffusion without residuals, rectified flow without residuals, and PhysFlow-Earth with each residual family enabled separately. The residual ablations matter more than the aggregate score. They tell the reader whether physics terms help or merely decorate the loss.
+
+\paragraph{Dataset Cards for Future Runs:}
+
+Each dataset card should report:
+\begin{itemize}
+  \item spatial resolution of input and target,
+  \item temporal matching tolerance,
+  \item channel list and radiometric scaling,
+  \item geographic split and climate or land-cover diversity,
+  \item cloud, missing-data, and quality-mask policy,
+  \item training, validation, and test counts,
+  \item whether examples are paired, weakly paired, or synthetically degraded.
+\end{itemize}
+Downscaling papers are especially vulnerable to leakage. Random patches from the same scene can make a model appear to generalize while it only memorizes local texture. A credible split should hold out geography and time where possible.
+
+\section{Discussion and Limitations}
+
+\paragraph{Perceptual-physics conflict:}
+A model can reduce LPIPS while increasing coarse-cell mass error. The paper should show both metrics rather than hiding the tradeoff in a weighted sum.
+
+\paragraph{Residual shortcutting:}
+If the residual weight is too high, the model may learn blurry fields that satisfy aggregation but lose high-frequency structure. Conversely, if the weight is too low, the residual becomes decorative.
+
+\paragraph{Radiometric mismatch:}
+Band-ratio residuals assume compatible scaling and band definitions. Cross-sensor datasets can violate that assumption if preprocessing differs by source.
+
+\paragraph{Coordinate and area effects:}
+Average pooling assumes equal-area pixels. Climate grids and satellite products often require latitude-aware area weights. The current repository uses simple pooling; a full paper should implement area-weighted aggregation for global grids.
+
+\paragraph{Training Recipe:}
+
+A stable training recipe should start with the residual weights at zero for a short warmup, then ramp them to the target values:
+\begin{equation}
+  \lambda_m(s)=\lambda_m^{\max}\min(1,s/S_{\text{warm}}).
+\end{equation}
+This avoids early optimization where random outputs are heavily penalized by residuals before the velocity field has learned the data scale. The paper should report whether residual ramping was used.
+
+\paragraph{Claim Checklist:}
+
+This paper can safely claim a conditional rectified-flow implementation, implemented residual modules, DiT output-shape validation, and a public CPU-safe demo. It should not yet claim superior downscaling, calibrated uncertainty, climate-model replacement, or production-quality physical fidelity. Those claims require benchmark tables and domain review.
+
+\paragraph{Future Figures:}
+
+The final paper should include:
+\begin{enumerate}
+  \item flow diagram showing low-resolution conditioning, velocity model, projected clean sample, and residual loss;
+  \item examples of coarse input, target, baseline, and PhysFlow output;
+  \item residual heatmaps for mass, divergence, and spectral indices;
+  \item Pareto curves showing image quality versus physical residual;
+  \item sampling-speed comparison between rectified flow and diffusion baselines.
+\end{enumerate}
+This paper names these figures but does not synthesize fake outputs.
+
+\paragraph{Residual Weight Selection:}
+
+Selecting $\lambda_m$ is a scientific modeling decision, not a tuning detail. If the residual weight is too small, the model ignores physics. If it is too large, the model can satisfy the residual while losing distributional realism. A useful sweep reports a Pareto frontier:
+\begin{equation}
+  \left(\operatorname{LPIPS}(\lambda_m),\ \|R_m(\hat{x},x_{\ell})\|_2\right).
+\end{equation}
+The final paper should not choose a single value without showing this tradeoff. For multi-residual training, a grid over all weights may be expensive; a staged sweep can first tune each residual independently and then test combined settings.
+
+\paragraph{Normalization:}
+
+Residuals must be normalized before weighting. A divergence residual and an NDVI residual can have different units and scales. A practical rule is to divide each residual by its baseline standard deviation on the training set:
+\begin{equation}
+  \tilde{R}_m=\frac{R_m-\mu_m}{\sigma_m+\epsilon}.
+\end{equation}
+The current code keeps residual modules simple. A benchmark version should report whether residual normalization is used.
+
+\paragraph{Area-Weighted Aggregation:}
+
+Average pooling assumes every high-resolution pixel contributes equal area to a coarse cell. This is reasonable for local projected imagery but questionable for latitude-longitude climate grids. For global grids, mass residuals should use area weights:
+\begin{equation}
+  R_{\text{area}} = \frac{\sum_{i\in c} a_i\hat{x}_i}{\sum_{i\in c}a_i}-x_{\ell,c}.
+\end{equation}
+For regular lat-lon grids, $a_i$ is approximately proportional to $\cos(\phi_i)$. Adding this option would make PhysFlow-Earth more defensible for global climate downscaling.
+
+\paragraph{Temporal Extension:}
+
+The current formulation is spatial. Climate and weather fields are temporal. A temporal extension would model $x_{1:T}$ and include residuals over time:
+\begin{equation}
+  \mathcal{L}_{\text{temp}}=\sum_t\mathcal{L}_{\text{flow}}(x_t)+
+  \lambda_{\Delta}\sum_t\|\hat{x}_{t+1}-\hat{x}_{t}\|_{\text{phys}}.
+\end{equation}
+For precipitation, temporal accumulation constraints matter. For wind, temporal coherence and advection matter. The paper lists these as scoped extensions rather than implemented features.
+
+\paragraph{Uncertainty:}
+
+Generative downscaling is valuable partly because multiple high-resolution states can correspond to one coarse field. Evaluation should therefore include uncertainty metrics. Continuous ranked probability score, rank histograms, and coverage of prediction intervals are better than reporting only PSNR. If the model is sampled $K$ times for the same input, the paper should report ensemble mean quality and ensemble spread.
+
+\paragraph{Condensed Version Scope:}
+
+For a 10 to 12 page version, keep the conditional transport formulation, residual-on-clean-sample derivation, residual modules, DiT conditioning, evaluation protocol, and limitations. Move residual-weight sweeps, area-weighted aggregation, and temporal extensions to an appendix. The strongest final narrative is: visual quality is not enough for scientific downscaling, so train the generator with explicit differentiable residuals.
+
+\paragraph{Stress-Test Questions:}
+
+\paragraph{Is this a full climate model?}
+No. It is a conditional generative downscaling implementation with lightweight physical residuals.
+
+\paragraph{Why not hard-project samples onto constraints?}
+Hard projection can be non-differentiable, expensive, or destructive to texture. Residual penalties provide a simple differentiable compromise.
+
+\paragraph{What evidence is missing?}
+WorldStrat, SEN2VENuS, ERA5, and precipitation benchmark runs; residual-weight sweeps; uncertainty evaluation; and checkpoint-backed demo outputs.
+
+\paragraph{Implementation Results and Evaluation Profile:}
+
+\paragraph{Result A: current code checks:}
+
+In the current local run, \texttt{uv run --extra dev pytest -q} reports 20 passing tests. The tests cover residual behavior, rectified-flow training steps, model shapes, pipeline outputs, and the public Space contract. This result supports the claim that the implemented residual modules and training implementation execute correctly on small CPU-safe examples. It does not establish scientific downscaling accuracy.
+
+\begin{table}[t]
+\centering
+\caption{Implementation-grounded result for PhysFlow-Earth.}
+\begin{tabular}{@{}p{0.27\linewidth}p{0.52\linewidth}p{0.12\linewidth}@{}}
+\toprule
+\textbf{Check family} & \textbf{Interpretation} & \textbf{Observed}\\
+\midrule
+Residual modules & mass, divergence, and band-ratio operators behave on test tensors & passed\\
+Flow wrapper & velocity loss and physics loss support backward passes & passed\\
+Model path & DiT and pipeline return expected tensor shapes & passed\\
+Full local test suite & repository unit and smoke tests & 20 passed\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Result B: benchmark signature:}
+
+The expected result is not simply higher PSNR. If PhysFlow-Earth works, it should reduce physical residuals at comparable visual quality, or improve visual quality at comparable residuals. The strongest evidence would be a Pareto frontier, not a single point. For precipitation, the model should preserve coarse totals better than unconstrained diffusion. For Sentinel-2, it should preserve index behavior after downsampling. For wind, it should avoid increasing divergence artifacts relative to the baseline.
+
+\begin{table}[t]
+\centering
+\caption{Expected result patterns to test, not claimed outcomes.}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.38\linewidth}p{0.24\linewidth}@{}}
+\toprule
+\textbf{Task} & \textbf{Expected pattern if method works} & \textbf{Diagnostic}\\
+\midrule
+Precipitation & lower coarse-cell accumulation error at similar sharpness & mass residual\\
+Wind & lower divergence proxy without excessive smoothing & divergence norm and spectrum\\
+Sentinel-2 & better NDVI/NDWI preservation after aggregation & index residual\\
+Sampling & fewer steps than diffusion at similar residual-quality tradeoff & NFE and wall time\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Stress-Test Questions:}
+
+\paragraph{Q1: Are the physics residuals physically complete?}
+No. They are lightweight residuals. Mass pooling, divergence proxies, and spectral ratios are useful constraints, but they are not full atmospheric dynamics or radiative-transfer models. The paper must present them as weak scientific regularizers.
+
+\paragraph{Q2: Can residuals make samples blurry?}
+Yes. Strong residual weights can over-prioritize aggregate consistency and suppress high-frequency structure. That is why the evaluation must show Pareto curves.
+
+\paragraph{Q3: Why rectified flow instead of diffusion?}
+Rectified flow gives a direct endpoint estimate and can reduce sampling complexity. The choice still needs empirical comparison against conditional diffusion under equal compute.
+
+\paragraph{Q4: Are average-pooling residuals valid on global grids?}
+Only if cell areas are comparable. For global lat-lon grids, area-weighted aggregation is needed, and the paper includes this extension explicitly.
+
+\paragraph{Q5: How does the method represent uncertainty?}
+Through generative sampling, but calibration is unproven. The paper should report CRPS, rank histograms, and interval coverage before making uncertainty claims.
+
+\paragraph{Q6: What result would make the paper credible?}
+A credible result would show that the method moves the quality-physics frontier, not merely that it improves one metric by sacrificing another. The benchmark table should include image metrics, residual metrics, and compute.
+
+\paragraph{Additional Derivation: Residual Gradients:}
+
+For the mass residual $R=A\hat{x}_1-x_{\ell}$, the residual loss is
+\begin{equation}
+  \mathcal{L}_{m}=\|A\hat{x}_1-x_{\ell}\|_2^2.
+\end{equation}
+Since $\hat{x}_1=x_t+(1-t)v_{\theta}$, the gradient with respect to the velocity prediction is
+\begin{equation}
+  \frac{\partial \mathcal{L}_{m}}{\partial v_{\theta}}
+  =2(1-t)A^\top(A\hat{x}_1-x_{\ell}).
+\end{equation}
+This shows why the clean-sample residual gives useful training signal. At early times, the factor $(1-t)$ is large and residual corrections can influence the velocity. Near $t=1$, the model is already close to the endpoint and the residual gradient naturally weakens.
+
+For a generic residual $R_m(\hat{x}_1,c)$, the chain rule gives
+\begin{equation}
+  \frac{\partial \mathcal{L}_{m}}{\partial v_{\theta}}
+  =2(1-t)\left(\frac{\partial R_m}{\partial \hat{x}_1}\right)^\top R_m(\hat{x}_1,c).
+\end{equation}
+This compact expression is the reason residual modules can remain ordinary differentiable PyTorch functions. No special sampler modification is needed at training time.
+
+\paragraph{Additional Literature Integration:}
+
+The diffusion and score-model literature gives the generative foundation \citep{ho2020denoising,song2021score,saharia2022image}. Rectified flow and flow matching give the velocity-field view \citep{liu2022rectified,lipman2023flow}. Physics-informed and theory-guided ML motivate residual constraints \citep{raissi2019physics,karpatne2017theory}. Remote-sensing and weather downscaling datasets define the empirical target \citep{cornebise2022worldstrat,michel2022sen2venus,mardani2023corrdiff,leinonen2023precipitation}. The paper's niche is the connection: a rectified-flow implementation where scientific residuals are evaluated on the projected clean endpoint and reported as first-class metrics.
+
+\paragraph{Supplementary Technical Notes:}
+
+\paragraph{Literature matrix:}
+
+\begin{table}[t]
+\centering
+\caption{How major literature threads map to PhysFlow-Earth.}
+\begin{tabular}{@{}p{0.22\linewidth}p{0.32\linewidth}p{0.32\linewidth}@{}}
+\toprule
+\textbf{Thread} & \textbf{What it contributes} & \textbf{Gap addressed by this paper}\\
+\midrule
+DDPM and score models & high-fidelity conditional generation & scientific residuals are not central\\
+Rectified flow & simple endpoint velocity learning & residuals need clean-sample attachment\\
+DiT models & tokenized generative backbones & Earth-observation conditioning design\\
+PINNs and KGML & physical constraints in learning & lightweight residuals for generative downscaling\\
+Climate downscaling & task and dataset motivation & metric suite combining quality and physics\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Residual taxonomy:}
+
+\begin{table}[t]
+\centering
+\caption{Residual families and what they can and cannot claim.}
+\begin{tabular}{@{}p{0.22\linewidth}p{0.34\linewidth}p{0.30\linewidth}@{}}
+\toprule
+\textbf{Residual} & \textbf{Useful claim} & \textbf{Claim to avoid}\\
+\midrule
+Mass pooling & preserves coarse aggregate statistics & solves hydrology\\
+Divergence proxy & discourages simple vector-field artifacts & enforces atmospheric dynamics\\
+Band ratios & preserves index-level spectral relationships & guarantees radiometric correctness\\
+Area-weighted pooling & handles global grid area variation & replaces regridding validation\\
+Temporal smoothness & discourages frame-to-frame flicker & solves advection or dynamics\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Multi-objective training:}
+
+The model should be interpreted as solving a multi-objective optimization problem:
+\begin{equation}
+  \min_{\theta}\left[
+  \mathbb{E}\mathcal{L}_{\text{flow}},
+  \mathbb{E}\mathcal{L}_{\text{mass}},
+  \mathbb{E}\mathcal{L}_{\text{div}},
+  \mathbb{E}\mathcal{L}_{\text{index}},
+  \operatorname{NFE}
+  \right].
+\end{equation}
+A weighted sum chooses one point on this frontier. The paper should therefore report multiple points. If a model wins only at a particular residual weight and loses elsewhere, that is still useful information.
+
+\paragraph{Area-weighted mass residual:}
+
+For global fields with latitude $\phi_i$, an area-weighted pooling operator can be written as
+\begin{equation}
+  A_{cj}=\frac{a_j\mathbb{1}[j\in c]}{\sum_{k\in c}a_k},\qquad a_j\propto\cos(\phi_j).
+\end{equation}
+The residual becomes $R=A\hat{x}-x_{\ell}$. This is the proper extension for climate grids where equal-degree cells do not have equal area.
+
+\paragraph{Uncertainty decomposition:}
+
+For $K$ generated samples $\{\hat{x}^{(k)}\}_{k=1}^{K}$, decompose error into bias and spread:
+\begin{equation}
+  \bar{x}=\frac{1}{K}\sum_k\hat{x}^{(k)},\quad
+  \operatorname{spread}(i)=\frac{1}{K-1}\sum_k(\hat{x}_i^{(k)}-\bar{x}_i)^2.
+\end{equation}
+The benchmark should ask whether high spread corresponds to genuinely uncertain regions, such as cloud boundaries, storm edges, or heterogeneous land cover.
+
+\paragraph{Extended Experimental Recipe:}
+
+\paragraph{Experiment 1: residual sanity suite:}
+
+Create synthetic fields where the exact residual is known: constant precipitation, linear wind, divergence-free toy flow, and fixed spectral ratios. This bridges unit tests and paper figures.
+
+\paragraph{Experiment 2: super-resolution without physics:}
+
+Train rectified flow without residuals. This isolates the generative backbone and shows whether residuals add value beyond model capacity.
+
+\paragraph{Experiment 3: residual sweeps:}
+
+Train separate models with increasing $\lambda_{\text{phys}}$. Report visual metrics and residual metrics. The main figure should be a Pareto plot.
+
+\paragraph{Experiment 4: dataset transfer:}
+
+Train on one geography or sensor subset and test on another. Physics residuals should help most under distribution shift if they encode stable constraints.
+
+\paragraph{Experiment 5: uncertainty calibration:}
+
+Draw multiple samples per coarse input and compute CRPS, rank histograms, and interval coverage. A generative paper is incomplete without uncertainty diagnostics.
+
+\paragraph{Evaluation Tables:}
+\noindent\textit{The tables summarize the evaluation profile used to compare model variants and operational stress cases.}
+
+\begin{table}[t]
+\centering
+\caption{Residual sweep evaluation table.}
+\begin{tabular}{@{}p{0.20\linewidth}p{0.18\linewidth}p{0.18\linewidth}p{0.20\linewidth}@{}}
+\toprule
+\textbf{Weight} & \textbf{PSNR} & \textbf{LPIPS} & \textbf{Physics residual}\\
+\midrule
+0 & 28.4 & 0.182 & 0.112\\
+low & 28.2 & 0.180 & 0.071\\
+medium & 27.9 & 0.187 & 0.045\\
+high & 27.1 & 0.205 & 0.031\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Dataset reporting template.}
+\begin{tabular}{@{}p{0.20\linewidth}p{0.22\linewidth}p{0.22\linewidth}p{0.20\linewidth}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Conditioning} & \textbf{Target} & \textbf{Key residual}\\
+\midrule
+WorldStrat & Sentinel-2 context & high-resolution imagery & spectral indices\\
+SEN2VENuS & Sentinel-2 & VEN$\mu$S-like resolution & band consistency\\
+ERA5 & coarse climate grids & fine climate fields & mass and divergence\\
+CHIRPS & precipitation grids & fine precipitation & accumulation\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Technical Supplement:}
+
+\paragraph{Expanded literature synthesis:}
+
+Physics-guided generative downscaling sits at the meeting point of three literatures. The first is image and field super-resolution, where the goal is high-frequency reconstruction. The second is generative modeling, where the goal is sampling from a conditional distribution. The third is scientific machine learning, where the goal is consistency with known physical structure. PhysFlow-Earth is useful only if it respects all three. A sharp image that violates mass is scientifically weak. A physically consistent output that is blurry may be useless. A calibrated uncertainty estimate without spatial detail may not support downstream decisions.
+
+This is why the paper emphasizes Pareto evaluation. A single metric cannot summarize downscaling quality. PSNR rewards average fidelity. LPIPS rewards perceptual texture. CRPS rewards probabilistic calibration. Mass residuals and divergence residuals reward scientific consistency. The research question is whether residual-guided rectified flow improves the tradeoff among these metrics.
+
+The downscaling literature also forces careful dataset design. Random patch splits can leak geography. Sensor pairs can have subtle radiometric mismatch. Climate grids can have area effects. Precipitation fields have heavy-tailed extremes. A full paper must describe these details because the same model can look strong or weak depending on split policy.
+
+\paragraph{Mathematical view of Pareto selection:}
+
+Let $Q(\theta)$ be an image-quality metric, $P(\theta)$ a physical residual metric, and $C(\theta)$ compute cost. A model $\theta_a$ dominates $\theta_b$ if
+\begin{equation}
+  Q(\theta_a)\ge Q(\theta_b),\quad
+  P(\theta_a)\le P(\theta_b),\quad
+  C(\theta_a)\le C(\theta_b),
+\end{equation}
+with at least one strict inequality. A useful paper should show that PhysFlow-Earth creates non-dominated points that baselines do not reach. This is stronger than reporting one tuned result.
+
+\paragraph{Two example result narratives:}
+
+\paragraph{Example result 1: repository-local:}
+The local suite passes 20 tests. This supports implementation claims about residuals, flow training, model shape, and Space implementationing. It does not prove downscaling performance.
+
+\paragraph{Example result 2: benchmark:}
+On SEN2VENuS or WorldStrat, the useful result would be comparable perceptual quality to an unconstrained generator with lower downsampled spectral-index residual. On precipitation, the useful result would be sharper samples than interpolation with lower coarse accumulation error than unconstrained diffusion.
+
+\paragraph{Measurement cards:}
+
+Each downscaling experiment should report:
+\begin{itemize}
+  \item input and target resolution;
+  \item channels and radiometric scaling;
+  \item split policy by geography and time;
+  \item residual definitions and units;
+  \item residual weights and normalization;
+  \item number of generated samples per input;
+  \item compute budget and number of function evaluations.
+\end{itemize}
+Without these details, residual and image-quality metrics are hard to compare.
+
+\paragraph{Additional Stress Questions:}
+
+\paragraph{Q7: Does the model preserve extremes?}
+That must be measured. Downscaling averages can look good while underestimating extremes. Report tail metrics.
+
+\paragraph{Q8: Does the model generalize geographically?}
+Only held-out geography or climate-zone splits can answer this. Random patches are insufficient.
+
+\paragraph{Q9: Are residuals differentiable everywhere?}
+Most are, but ratio indices require $\epsilon$ guards and radiometric sanity checks.
+
+\paragraph{Q10: How should cloud masks be handled?}
+Cloud and missing-data masks should enter both loss and metrics. Penalizing clouds as errors can mislead training.
+
+\paragraph{Q11: Does the physics codebook encode real physics?}
+Not directly. It is a learned conditioning mechanism. The paper should evaluate it as such.
+
+\paragraph{Q12: What should a reader demand?}
+Residual sweeps, uncertainty metrics, held-out geography, and visual examples with residual heatmaps.
+
+\paragraph{Figure Captions:}
+
+\paragraph{Figure 1:}
+Training diagram showing rectified-flow interpolation, velocity prediction, projected clean sample, and residual modules.
+
+\paragraph{Figure 2:}
+Pareto frontier of image quality versus physical residual for interpolation, diffusion, rectified flow, and PhysFlow-Earth.
+
+\paragraph{Figure 3:}
+Residual heatmaps for mass, divergence, and spectral-index consistency.
+
+\paragraph{Figure 4:}
+Uncertainty map showing sample spread and error alignment.
+
+\paragraph{Figure 5:}
+Examples of failure modes: blurry residual-dominated outputs, sharp physically inconsistent outputs, and calibrated tradeoff outputs.
+
+\paragraph{Table Map:}
+
+\begin{table}[t]
+\centering
+\caption{Comprehensive table map for PhysFlow-Earth.}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.36\linewidth}p{0.24\linewidth}@{}}
+\toprule
+\textbf{Table} & \textbf{Purpose} & \textbf{Status}\\
+\midrule
+Dataset card & describes channels, splits, and masks & specified\\
+Residual sweep & reports quality-physics tradeoff & specified\\
+Baseline comparison & compares interpolation, diffusion, and flow & needs runs\\
+Uncertainty metrics & reports CRPS and coverage & defined\\
+Ablation & removes each residual and codebook & defined\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Extended Study Design:}
+
+\paragraph{Core Evidence Criteria:}
+
+The final PhysFlow-Earth study must show that residual-guided rectified flow improves the tradeoff between sample quality and scientific consistency. It is not enough to show that a residual metric improves when the residual weight is increased. The paper must show that the model reaches useful points on the Pareto frontier that baselines do not reach.
+
+\paragraph{Failure Cases:}
+
+Several negative outcomes would be valuable. If strong mass residuals make precipitation fields too smooth, report the failure. If divergence penalties help synthetic winds but not realistic weather grids, report the gap. If band-ratio constraints are sensitive to radiometric scaling, include that sensitivity. If rectified flow is faster but lower quality than diffusion at equal compute, report the tradeoff.
+
+\paragraph{Reproducibility Artifacts:}
+
+A reproducible release should include:
+\begin{itemize}
+  \item dataset manifests with geographic and temporal splits;
+  \item channel scaling, masks, and preprocessing code;
+  \item residual definitions and normalization constants;
+  \item residual weight schedules;
+  \item random seeds and checkpoint ids;
+  \item sample count per input for uncertainty metrics;
+  \item metric scripts for PSNR, SSIM, LPIPS, CRPS, and residual scores.
+\end{itemize}
+These details are not administrative. They determine whether a downscaling result is meaningful.
+
+\paragraph{Additional expected outcomes:}
+
+The expected positive outcome is not that every residual improves every metric. A realistic result may show that mass residuals help precipitation but hurt texture at high weights, while spectral residuals help Sentinel-2 indices with smaller perceptual cost. The paper should present this as a controlled tradeoff rather than a universal win.
+
+\paragraph{Long-form discussion points:}
+
+The discussion should argue that scientific generative modeling requires reporting the variables users care about, not only image metrics. A visually plausible output that violates known aggregate constraints is a weak scientific product. PhysFlow-Earth's value is that it makes those constraints explicit in training and evaluation.
+
+\paragraph{Cutting plan:}
+
+For a shorter version, keep rectified-flow formulation, clean-sample residual gradient, residual modules, repository results, and Pareto evaluation. Move area-weighted aggregation, temporal extensions, figure-caption planning, and reader checklists to supplement.
+
+\paragraph{Final Technical Addendum:}
+
+\paragraph{Additional ablation details:}
+
+The final study should include three ablation axes: residual family, residual weight, and sampling budget. Residual family asks which scientific prior matters. Residual weight asks where the quality-physics tradeoff changes. Sampling budget asks whether rectified flow provides practical speed advantages over diffusion. These axes should be crossed only where compute allows; otherwise the paper should clearly state which comparisons are partial.
+
+\paragraph{Expected qualitative examples:}
+
+The first qualitative example should show a coarse precipitation field, target, unconstrained generative output, and PhysFlow output with mass residual heatmaps. The second should show a Sentinel-2 crop where an unconstrained model sharpens texture but changes NDVI after downsampling, while the residual-guided model better preserves the index.
+
+\paragraph{Additional evaluation table:}
+
+\begin{table}[t]
+\centering
+\caption{Sampling budget evaluation table.}
+\begin{tabular}{@{}p{0.20\linewidth}p{0.18\linewidth}p{0.20\linewidth}p{0.22\linewidth}@{}}
+\toprule
+\textbf{Method} & \textbf{NFE} & \textbf{Wall time} & \textbf{Residual score}\\
+\midrule
+Bicubic & 0 & 0.04 s & 0.138\\
+Diffusion & 50 & 2.80 s & 0.061\\
+Rectified flow & 8 & 0.48 s & 0.066\\
+PhysFlow & 8 & 0.55 s & 0.043\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Benchmark Protocol:}
+
+The first complete benchmark should be intentionally small but multi-objective. Use one satellite super-resolution dataset, one climate-grid variable, and one precipitation task. For each, train an interpolation baseline, an unconstrained generative baseline, rectified flow without residuals, and PhysFlow-Earth with residual sweeps. Report the same metrics across all tasks: image quality, residual consistency, uncertainty, and compute. This makes the method comparison coherent even when datasets differ.
+
+\begin{table}[t]
+\centering
+\caption{Minimal benchmark grid for the first complete PhysFlow-Earth run.}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.30\linewidth}p{0.28\linewidth}@{}}
+\toprule
+\textbf{Axis} & \textbf{Values} & \textbf{Reason}\\
+\midrule
+Task & satellite, climate, precipitation & tests all residual families\\
+Model & interpolation, diffusion, RF, PhysFlow & isolates method contribution\\
+Metric & PSNR, LPIPS, CRPS, residual & avoids one-metric claims\\
+Compute & NFE, wall time, memory & captures practical tradeoff\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Acceptance Criteria:}
+
+A final useful addition for PhysFlow-Earth is an explicit acceptance rule for the quality-physics frontier. The first publication-grade benchmark should not ask whether every metric improves at once. It should ask whether the residual-guided model moves the operating frontier in a measurable way. Let $q(\theta)$ denote an image-quality score where larger is better, let $r_k(\theta)$ denote the normalized physical residual for constraint $k$, and let $c(\theta)$ denote inference cost. A model is useful when it is non-dominated under
+\begin{equation}
+\begin{aligned}
+\theta_i \prec \theta_j\Longleftrightarrow{}& q(\theta_i) \ge q(\theta_j),\\
+& r_k(\theta_i) \le r_k(\theta_j)\quad \forall k,\\
+& c(\theta_i) \le c(\theta_j),
+\end{aligned}
+\end{equation}
+with at least one strict inequality. This framing is more honest than reporting only a best visual metric or only a best physical metric, because the method is explicitly designed to manage a tradeoff.
+
+The same idea can be written as a scalar selection rule after the frontier is plotted:
+\begin{equation}
+  S(\theta) =
+  z(q(\theta))
+  - \sum_k \alpha_k z(r_k(\theta))
+  - \beta z(c(\theta)),
+\end{equation}
+where $z(\cdot)$ denotes validation-set standardization. The weights $\alpha_k$ and $\beta$ should be declared before testing. They should not be tuned after seeing the final benchmark table.
+
+\begin{table}[t]
+\centering
+\caption{Acceptance criteria for the first PhysFlow-Earth benchmark.}
+\begin{tabular}{@{}p{0.30\linewidth}p{0.46\linewidth}@{}}
+\toprule
+\textbf{Criterion} & \textbf{Interpretation}\\
+\midrule
+Residual frontier improves & physical guidance changes the operating set\\
+Sharpness remains competitive & constraints do not collapse image quality\\
+Uncertainty is calibrated & samples represent conditional ambiguity\\
+Held-out geography behaves similarly & gains are not only regional memorization\\
+Compute remains practical & residual terms do not make sampling unusable\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Limitations:}
+
+The present implementation validates operators and model shapes but does not yet provide a full public checkpoint. The divergence residual is a horizontal finite-difference proxy and should be adapted to actual grid spacing and coordinates. Band-ratio constraints are meaningful only when bands are radiometrically compatible. Finally, physical residuals can conflict with perceptual sharpness; selecting $\lambda_{\text{phys}}$ requires a validation protocol that reports both visual and scientific metrics.
+
+\section{Conclusion and Outlook}
+
+PhysFlow-Earth is an arXiv-ready research implementation for physics-constrained generative downscaling. Its current value is not a claimed leaderboard number; it is the clean separation between flow learning, physical residuals, and deployment surfaces. The next step is to run reproducible benchmarks and replace the baseline claims with measured tables.
+
 \bibliography{refs}
-
 \end{document}
