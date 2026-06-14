@@ -13,11 +13,14 @@ This work extends three published diffusion papers (Pi-DPM, Kriging-informed con
 
 ## Highlights
 
-- Conditional rectified-flow with a DiT-XL backbone and cross-attention to a learned codebook of 64 physics-constraint embeddings.
+- Conditional rectified-flow with a DiT backbone and cross-attention to a learned codebook of physics-constraint embeddings.
 - Differentiable physics residual operators per modality: Sentinel-2 band-ratio preservation, ERA5 divergence-free wind, CHIRPS precipitation mass conservation.
-- 4-step consistency-distilled inference (200x speedup vs. 25-step Euler).
-- Diffusers-compatible: `pipeline = PhysFlowPipeline.from_pretrained("Arun0808/physflow-sentinel2-x4")`.
-- Beats EDiffSR (CVPR 2024) on WorldStrat PSNR/SSIM and improves the new physics-violation metric by 25-40%.
+- Diffusers-style pipeline (`PhysFlowPipeline`) with save/from_pretrained.
+- Ships two paper implementations as submodules: Ki-CDPM (kriging-informed conditional diffusion downscaling, `physflow/kicdpm/`) and physics-guided generation (`physflow/pggenfm/`).
+
+## Status: what is real vs. planned
+
+REAL and tested: the rectified-flow training step + clean-sample projection (`flow/`), the DiT denoiser with physics-codebook conditioning (`models/`), all three differentiable physics residuals (`physics/`), the Euler/consistency samplers, the Diffusers-style pipeline, the Ki-CDPM and pggenfm modules, and a SYNTHETIC data layer (`physflow/data/`) so `training/train` and `eval/worldstrat_bench` run end to end without a download. NOT yet done: no trained checkpoints are shipped (`from_pretrained("Arun0808/physflow-sentinel2-x4")` would 404), no consistency distillation, and no real-dataset benchmark run. No leaderboard result is claimed.
 
 ## Quickstart
 
@@ -25,9 +28,13 @@ This work extends three published diffusion papers (Pi-DPM, Kriging-informed con
 git clone https://github.com/arunshar/physflow-earth
 cd physflow-earth
 pip install -e .
-bash scripts/download_worldstrat.sh
+# runs on the SYNTHETIC data layer (physflow/data) out of the box, no download:
 python -m physflow.training.train +experiment=sentinel2_x4
 ```
+
+To train on real WorldStrat / ERA5 data, replace the synthetic loaders in
+`physflow/data/` with loaders over the real archives that return the same
+`{"x_hr", "x_lr"}` dicts; nothing in the training loop changes.
 
 ## Smoke tests
 
@@ -38,15 +45,14 @@ pytest                                    # 8 + 12 = 20 tests
 python /tmp/launch_smoke.py "$(pwd)" space/app.py
 ```
 
-Verified status (CPU smoke):
-- 8/8 physics-residual + rectified-flow tests (mass conservation, divergence, NDVI/NDWI band ratios, contrastive flow training step with backward).
-- 12/12 Space smoke tests (DiT-XL forward shape, Euler-sample inference shape, full training step with backward gradient, UI build, requirements parseable, HF README frontmatter).
-- Gradio Space launches on a local port and serves HTTP 200 with valid Gradio HTML.
-- `space/requirements.txt` resolves cleanly.
+Test status (CPU, in the project container):
+- physics-residual + rectified-flow tests pass (mass conservation, divergence, NDVI/NDWI band ratios, flow training step with backward).
+- Ki-CDPM (6) and pggenfm (3) tests pass.
+- The Gradio Space tests require `gradio` installed; the Space itself is a demo wrapper, not a benchmarked system.
 
 ## Try the live demo
 
-[HF Space](https://huggingface.co/spaces/Arun0808/physflow-earth) — Folium AOI picker, variable / scenario dropdowns, side-by-side coarse vs. downscaled output with a physics-violation dashboard.
+[HF Space](https://huggingface.co/spaces/Arun0808/physflow-earth) is a demo wrapper. It currently uses a bilinear-interpolation placeholder for the pipeline (no trained checkpoint is shipped), so treat it as a UI preview, not a working downscaler.
 
 ## Method
 
@@ -90,20 +96,23 @@ physflow-earth/
 └── scripts/{download_worldstrat.sh, submit_msi.slurm}
 ```
 
-## Reproducing leaderboard
+## Planned evaluation (NOT measured)
+
+No benchmark has been run: there are no trained checkpoints and the data layer
+shipped here is synthetic. The published baselines below are listed only as the
+reference points a real run would target; no PhysFlow row is reported because no
+PhysFlow number has been measured.
 
 ```bash
-python -m physflow.eval.worldstrat_bench \
-  --pipeline hf://Arun0808/physflow-sentinel2-x4 \
-  --metrics psnr ssim lpips ndvi_residual band_ratio_violation
+# requires a trained checkpoint and the real WorldStrat loader (neither shipped)
+python -m physflow.eval.worldstrat_bench --metrics psnr ssim lpips ndvi_residual
 ```
 
-| Method | PSNR | SSIM | LPIPS | NDVI residual (lower better) |
-| --- | --- | --- | --- | --- |
-| SR3 | 27.4 | 0.78 | 0.21 | 0.038 |
-| EDiffSR (CVPR 2024) | 28.1 | 0.80 | 0.18 | 0.032 |
-| CorrDiff | 28.0 | 0.80 | 0.19 | 0.029 |
-| **PhysFlow (ours)** | **28.6** | **0.83** | **0.16** | **0.018** |
+| Method (reported by their authors) | PSNR | SSIM | LPIPS |
+| --- | --- | --- | --- |
+| SR3 | 27.4 | 0.78 | 0.21 |
+| EDiffSR (CVPR 2024) | 28.1 | 0.80 | 0.18 |
+| CorrDiff | 28.0 | 0.80 | 0.19 |
 
 ## License
 

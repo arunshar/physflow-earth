@@ -8,7 +8,8 @@ dist/
 .ruff_cache/
 
 # Data, weights, logs
-data/
+/data/
+!src/physflow/data/
 checkpoints/
 outputs/
 *.safetensors
