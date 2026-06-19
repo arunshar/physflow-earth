@@ -19,6 +19,9 @@ outputs/
 wandb/
 runs/
 *.log
+# Slurm job stdout/stderr dropped at repo root (results/*.out is kept)
+physflow-hrrr-*.out
+physflow-hrrr-*.err
 
 .venv/
 venv/
