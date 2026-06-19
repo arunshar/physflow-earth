@@ -1,0 +1,21 @@
+[physflow-hrrr] node=aga39 gpu=NVIDIA A100-SXM4-40GB, 40960 MiB
+[physflow-hrrr] repo=/users/1/arunshar/paper-work/physflow-earth out=/scratch.global/arunshar/physflow_hrrr_v2 steps=8000 deg=bicubic hidden=384 depth=8 div_w=0.2
+[hrrr] device=cuda train=294 val=74 stats=['u', 'v', 'precip'] mean=[-0.683, 1.748, 0.077]
+[hrrr] seed=0 nophysics rmse=0.8398 grad=0.4743 hf=22.4800 mass=0.56022 div=0.09125 (447.4s)
+[hrrr] seed=0 physics   rmse=0.8578 grad=0.4977 hf=23.6920 mass=0.57703 div=0.08308 cov=0.935 (449.2s)
+[hrrr] seed=1 nophysics rmse=0.8191 grad=0.4468 hf=21.2180 mass=0.53950 div=0.08198 (445.4s)
+[hrrr] seed=1 physics   rmse=0.8726 grad=0.4973 hf=23.6166 mass=0.60054 div=0.08828 cov=0.935 (447.5s)
+[hrrr] seed=2 nophysics rmse=0.8714 grad=0.5031 hf=24.0999 mass=0.60479 div=0.10159 (445.1s)
+[hrrr] seed=2 physics   rmse=0.8744 grad=0.4878 hf=23.7416 mass=0.64145 div=0.12011 cov=0.932 (447.5s)
+[hrrr] bicubic    rmse=0.2900 grad=0.2377 hf=8.3377 mass=0.00291 div=0.00288
+
+=== HRRR 8x SR (bicubic degradation): physics vs no-physics vs bicubic (mean over seeds) ===
+  RMSE       bicubic=0.2900  nophysics=0.8434  physics=0.8683
+  grad_rmse  bicubic=0.2377  nophysics=0.4747  physics=0.4943
+  hf_rmse    bicubic=8.3377  nophysics=22.5993  physics=23.6834
+  mass_resid bicubic=0.00291  nophysics=0.56817  physics=0.60634
+  div_resid  bicubic=0.00288  nophysics=0.09161  physics=0.09716
+  conformal coverage (nominal 0.90): 0.934
+
+[hrrr] wrote /scratch.global/arunshar/physflow_hrrr_v2/summary.json
+[physflow-hrrr] done rc=0
