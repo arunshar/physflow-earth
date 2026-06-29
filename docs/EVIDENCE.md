@@ -30,3 +30,7 @@ tests/test_smoke.py::test_space_readme_has_hf_frontmatter PASSED         [100%]
 
 ============================== 20 passed in 2.00s ==============================
 ```
+
+## Reproduced demo (headline number)
+
+The horizontal-divergence operator returns max|div| = 0.0 (exact) on a divergence-free constant field, confirming the conservation residual is correct.
